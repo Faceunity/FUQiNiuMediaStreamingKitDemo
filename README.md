@@ -1,96 +1,161 @@
-# PLMediaStreamingKit
+# FUQiNiuMediaStreamingKitDemo 快速接入文档
 
-PLMediaStreamingKit 是一个适用于 iOS 的 RTMP 直播推流 SDK，可高度定制化和二次开发。特色是支持 iOS Camera 画面捕获并进行 H.264 硬编码，以及支持 iOS 麦克风音频采样并进行 AAC 硬编码；同时，还根据移动网络环境的多变性，实现了一套可供开发者灵活选择的编码参数集合。借助 PLMediaStreamingKit，开发者可以快速构建一款类似 [Meerkat](https://meerkatapp.co/) 或 [Periscope](https://www.periscope.tv/) 的手机直播应用。PLMediaStreamingKit 支持两种不同层次的 API，分别为 PLMediaStreamingKit 和 PLStreamingKit， PLStreamingKit 提供包括音视频编码，封包以及网络发送功能，PLMediaStreamingKit 除了提供 PLStreamingKit 的功能以外还提供了内置的采集，音视频处理以及一些系统打断事件的处理等。我们强烈推荐对音视频没有太多了解的开发者使用 PLMediaStreamingKit 提供的 API 进行开发，如果您对音视频数据的采集和处理有更多的需求，那么需要使用 PLStreamingKit 提供的 API 进行开发，不过在进行开发之前请确保您已经掌握了包括音视频采集，编码以及处理等相关的基础支持。
+FUQiNiuMediaStreamingKitDemo 是集成了 [Faceunity](https://github.com/Faceunity/FULiveDemo/tree/dev) 面部跟踪和虚拟道具功能和七牛推流功能的 Demo。
 
-## 功能特性
+本文是 FaceUnity SDK 快速对接七牛推流的导读说明，关于 FaceUnity SDK 的更多详细说明，请参看 [FULiveDemo](https://github.com/Faceunity/FULiveDemo/tree/dev)
 
-- [x] 支持硬件编码
-- [x] 多码率可选
-- [x] 支持 H.264 视频编码
-- [x] 支持 AAC 音频编码
-- [x] 支持前后摄像头
-- [x] 支持自动对焦
-- [x] 支持手动调整对焦点
-- [x] 支持闪光灯操作
-- [x] 支持多分辨率编码
-- [x] 支持 HeaderDoc 文档
-- [x] 支持构造带安全授权凭证的 RTMP 推流地址
-- [x] 支持 ARMv7, ARM64, i386, x86_64 架构
-- [x] 支持 RTMP 协议直播推流
-- [x] 支持音视频配置分离
-- [x] 支持推流时可变码率
-- [x] 提供发送 buffer
-- [x] 支持 Zoom 操作
-- [x] 支持音频 Mute 操作
-- [x] 支持视频 Orientation 操作
-- [x] 支持自定义 DNS 解析
-- [x] 支持弱网丢帧策略
-- [x] 支持纯音频或纯视频推流
-- [x] 支持后台音频推流
-- [x] 支持自定义滤镜功能
-- [x] 内置水印功能
-- [x] 内置美颜功能
-- [x] 支持返听功能
-- [x] 支持内置音乐播放器混音功能
-- [x] 支持内置音效功能
-- [x] 内置动态帧率功能
-- [x] 内置自适应码率功能
-- [x] 内置断线及网络切换自动重连功能
-- [x] 支持预览与直播流分别镜像
-- [x] 支持自定义音视频处理
-- [x] 支持苹果 ATS 安全标准
-- [x] 提供两种层次的 API，灵活选择，高可定制性与简单两不误
-- [x] 支持后台推图片功能
-- [x] 支持 QUIC 推流功能
 
-## 系统要求
 
-- iOS Target : >= iOS 8
-- iOS Device : >= iPhone 5
+## 快速集成方法
 
-## 安装方法
+### 一、导入 SDK
 
-[CocoaPods](https://cocoapods.org/) 是针对 Objective-C 的依赖管理工具，它能够将使用类似 PLMediaStreamingKit 的第三方库的安装过程变得非常简单和自动化，你能够用下面的命令来安装它：
+将 FaceUnity 文件夹全部拖入工程中，并且添加依赖库 `OpenGLES.framework`、`Accelerate.framework`、`CoreMedia.framework`、`AVFoundation.framework`、`stdc++.tbd`
 
-```bash
-$ sudo gem install cocoapods
+### 二、快速加载道具
+
+在 `viewDidLoad:` 中调用快速加载道具函数，该函数会创建一个美颜道具及指定的贴纸道具。
+
+```c
+[[FUManager shareManager] loadItems];
 ```
 
->构建 PLMediaStreamingKit 2.0.0+ 需要使用 CocoaPods 0.39.0+
+注：FUManager 的 shareManager 函数中会对 SDK 进行初始化，并设置默认的美颜参数。
 
-### Podfile
+### 三、图像处理
 
-为了使用 CoacoaPods 集成 PLMediaStreamingKit 到你的 Xcode 工程当中，你需要编写你的 `Podfile`
+在 `PLPanelDelegateGenerator.m` 的 `generate` 方法中会有视频数据的回调，可以在该回调中处理图像：
 
-```ruby
-source 'https://github.com/CocoaPods/Specs.git'
-target 'TargetName' do
-pod 'PLMediaStreamingKit'
-end
+```C
+[d implementMethod:@selector(mediaStreamingSession:cameraSourceDidGetPixelBuffer:) withBlock:^CVPixelBufferRef(PLMediaStreamingSession *session, CVPixelBufferRef pixelBuffer) {
+	__strong typeof(wSelf) strongSelf = wSelf;
+	    
+	    
+	/**     -----  FaceUnity  ----     **/
+	[[FUManager shareManager] renderItemsToPixelBuffer:pixelBuffer];
+	/**     -----  FaceUnity  ----     **/ 
+	
+	if (strongSelf.needProcessVideo) {
+	    size_t w = CVPixelBufferGetWidth(pixelBuffer);
+	    size_t h = CVPixelBufferGetHeight(pixelBuffer);
+	    size_t par = CVPixelBufferGetBytesPerRow(pixelBuffer);
+	    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+	    uint8_t *pimg = CVPixelBufferGetBaseAddress(pixelBuffer);
+	    for (int i = 0; i < w; i ++){
+	        for (int j = 0; j < h; j++){
+	            pimg[j * par + i * 4 + 1] = 255;
+	        }
+	    }
+	    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+	}
+	return pixelBuffer;
+}];
 ```
 
-- 默认为真机版
-- 若需要使用模拟器 + 真机版，则改用如下配置
+### 四、切换道具及调整美颜参数
 
-```
-pod "PLMediaStreamingKit", :podspec => 'https://raw.githubusercontent.com/pili-engineering/PLMediaStreamingKit/master/PLMediaStreamingKit-Universal.podspec'
-```
+本例中通过添加 FUAPIDemoBar 来实现切换道具及调整美颜参数的具体实现，FUAPIDemoBar 是快速集成用的UI，客户可自定义UI。
 
-**注意：鉴于目前 iOS 上架，只支持动态库真机，请在 App 上架前，更换至真机版本**
+1、在 PLMainViewController.m 中添加头文件，并创建 demoBar 属性
 
+```c
+#import <FUAPIDemoBar/FUAPIDemoBar.h>
 
-然后，运行如下的命令：
-
-```bash
-$ pod install
+@property (nonatomic, strong) FUAPIDemoBar *demoBar ;
 ```
 
-## PLMediaStreamingKit 文档
+2、在 demoBar 的 get 方法中对其进行初始化，并遵循代理  FUAPIDemoBarDelegate，实现代理方法 `demoBarDidSelectedItem:` 和 `demoBarBeautyParamChanged`以进一步实现道具的切换及美颜参数的调整。
 
-请参考开发者中心文档：[PLMediaStreamingKit 文档](https://developer.qiniu.com/pili/sdk/3778/PLMediaStreamingKit-overview)
+初始化
 
-## 反馈及意见
+```c
+// demobar 初始化
+-(FUAPIDemoBar *)demoBar {
+    if (!_demoBar) {
+        
+        _demoBar = [[FUAPIDemoBar alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height - 164 - 44, self.view.frame.size.width, 164)];
+        
+        _demoBar.itemsDataSource = [FUManager shareManager].itemsDataSource;
+        _demoBar.selectedItem = [FUManager shareManager].selectedItem ;
+        
+        _demoBar.filtersDataSource = [FUManager shareManager].filtersDataSource ;
+        _demoBar.beautyFiltersDataSource = [FUManager shareManager].beautyFiltersDataSource ;
+        _demoBar.filtersCHName = [FUManager shareManager].filtersCHName ;
+        _demoBar.selectedFilter = [FUManager shareManager].selectedFilter ;
+        [_demoBar setFilterLevel:[FUManager shareManager].selectedFilterLevel forFilter:[FUManager shareManager].selectedFilter] ;
+        
+        _demoBar.skinDetectEnable = [FUManager shareManager].skinDetectEnable;
+        _demoBar.blurShape = [FUManager shareManager].blurShape ;
+        _demoBar.blurLevel = [FUManager shareManager].blurLevel ;
+        _demoBar.whiteLevel = [FUManager shareManager].whiteLevel ;
+        _demoBar.redLevel = [FUManager shareManager].redLevel;
+        _demoBar.eyelightingLevel = [FUManager shareManager].eyelightingLevel ;
+        _demoBar.beautyToothLevel = [FUManager shareManager].beautyToothLevel ;
+        _demoBar.faceShape = [FUManager shareManager].faceShape ;
+        
+        _demoBar.enlargingLevel = [FUManager shareManager].enlargingLevel ;
+        _demoBar.thinningLevel = [FUManager shareManager].thinningLevel ;
+        _demoBar.enlargingLevel_new = [FUManager shareManager].enlargingLevel ;
+        _demoBar.thinningLevel_new = [FUManager shareManager].thinningLevel ;
+        _demoBar.jewLevel = [FUManager shareManager].jewLevel ;
+        _demoBar.foreheadLevel = [FUManager shareManager].foreheadLevel ;
+        _demoBar.noseLevel = [FUManager shareManager].noseLevel ;
+        _demoBar.mouthLevel = [FUManager shareManager].mouthLevel ;
+        
+        _demoBar.delegate = self;
+    }
+    return _demoBar ;
+}
+```
 
-当你遇到任何问题时，可以通过在 GitHub 的 repo 提交 issues 来反馈问题，请尽可能的描述清楚遇到的问题，如果有错误信息也一同附带，并且在 Labels 中指明类型为 bug 或者其他。
+切换贴纸代理方法
 
-[通过这里查看已有的 issues 和提交 Bug。](https://github.com/pili-engineering/PLMediaStreamingKit/issues)
+```c
+/**      FUAPIDemoBarDelegate       **/
+
+// 切换贴纸
+- (void)demoBarDidSelectedItem:(NSString *)itemName {
+    
+    [[FUManager shareManager] loadItem:itemName];
+}
+```
+
+更新美颜参数方法
+
+```c
+// 更新美颜参数
+- (void)demoBarBeautyParamChanged {
+    
+    [FUManager shareManager].skinDetectEnable = _demoBar.skinDetectEnable;
+    [FUManager shareManager].blurShape = _demoBar.blurShape;
+    [FUManager shareManager].blurLevel = _demoBar.blurLevel ;
+    [FUManager shareManager].whiteLevel = _demoBar.whiteLevel;
+    [FUManager shareManager].redLevel = _demoBar.redLevel;
+    [FUManager shareManager].eyelightingLevel = _demoBar.eyelightingLevel;
+    [FUManager shareManager].beautyToothLevel = _demoBar.beautyToothLevel;
+    [FUManager shareManager].faceShape = _demoBar.faceShape;
+    [FUManager shareManager].enlargingLevel = _demoBar.enlargingLevel;
+    [FUManager shareManager].thinningLevel = _demoBar.thinningLevel;
+    [FUManager shareManager].enlargingLevel_new = _demoBar.enlargingLevel_new;
+    [FUManager shareManager].thinningLevel_new = _demoBar.thinningLevel_new;
+    [FUManager shareManager].jewLevel = _demoBar.jewLevel;
+    [FUManager shareManager].foreheadLevel = _demoBar.foreheadLevel;
+    [FUManager shareManager].noseLevel = _demoBar.noseLevel;
+    [FUManager shareManager].mouthLevel = _demoBar.mouthLevel;
+    
+    [FUManager shareManager].selectedFilter = _demoBar.selectedFilter ;
+    [FUManager shareManager].selectedFilterLevel = _demoBar.selectedFilterLevel;
+}
+```
+
+3、在 `viewDidLoad:` 中将 demoBar 添加到页面上
+
+```c
+[self.view addSubview:self.demoBar];
+```
+
+### 五、道具销毁
+
+视频推流结束时需要调用 `[[FUManager shareManager] destoryItems]`  销毁道具。
+
+**快速集成完毕，关于 FaceUnity SDK 的更多详细说明，请参看 [FULiveDemo](https://github.com/Faceunity/FULiveDemo/tree/dev)**
