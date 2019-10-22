@@ -11,16 +11,20 @@
 #import "PLStreamingSessionConstructor.h"
 #import "PLPermissionRequestor.h"
 #import "PLPanelDelegateGenerator.h"
+
+#import "NSString+Random.h"
+
 #import <PLMediaStreamingKit/PLMediaStreamingKit.h>
+
 #import <Masonry/Masonry.h>
 #import <BlocksKit/BlocksKit.h>
 #import <BlocksKit/BlocksKit+UIKit.h>
 #import <WeiboSDK/WeiboSDK.h>
 #import "WXApi.h"
 
+
 #import "FUManager.h"
 #import <FUAPIDemoBar/FUAPIDemoBar.h>
-
 
 #warning 如果需要分享到微博或微信，请在这里填写相应的 key
 
@@ -28,9 +32,12 @@
 #define kWeiboAppSecret  @"Your weibo app secret"
 #define kWeiXinAppID     @"Your weixin app ID"
 
-@interface PLMainViewController () <PLMediaStreamingSessionDelegate, PLPanelDelegateGeneratorDelegate, PLStreamingSessionConstructorDelegate, FUAPIDemoBarDelegate>
-
-
+@interface PLMainViewController ()
+<
+PLMediaStreamingSessionDelegate,
+PLPanelDelegateGeneratorDelegate,
+UIAlertViewDelegate
+>
 @property (nonatomic, strong) FUAPIDemoBar *demoBar ;
 @end
 
@@ -40,11 +47,19 @@
     PLModelPanelGenerator *_modelPanelGenerator;
     PLPanelDelegateGenerator *_panelDelegateGenerator;
     PLStreamingSessionConstructor *_sessionConstructor;
+    PLAudioCaptureConfiguration *_audioCaptureConfiguration;
     UIButton *_startButton;
+    UIButton *_liveButton;
     UISlider *_zoomSlider;
+    NSURL *_streamCloudURL;
     NSURL *_streamURL;
     UIView *_inputURLView;
     UITextView *_inputURLTextView;
+}
+
+- (void)dealloc
+{
+
 }
 
 - (void)viewDidLoad
@@ -55,21 +70,13 @@
     
     [WXApi registerApp:kWeiXinAppID withDescription:@"PLMediaStreamingKitDemo"];
     
-    [self _prepareForCameraSetting];
-    [self _prepareButtons];
+    UIAlertView *alertView = [[UIAlertView alloc] initWithTitle:@"提示" message:@"需要开启回声消除么？" delegate:self cancelButtonTitle:@"不要" otherButtonTitles:@"开开开", nil];
+    [alertView show];
     
-    _panelDelegateGenerator = [[PLPanelDelegateGenerator alloc] initWithMediaStreamingSession:_streamingSession];
-    [_panelDelegateGenerator generate];
-    _panelDelegateGenerator.delegate = self;
-    
-    _modelPanelGenerator = [[PLModelPanelGenerator alloc] initWithMediaStreamingSession:_streamingSession panelDelegateGenerator:_panelDelegateGenerator];
-    self.panelModels = [_modelPanelGenerator generate];
     
     /**     -----  FaceUnity  ----     **/
-    
     [[FUManager shareManager] loadItems];
     [self.view addSubview:self.demoBar];
-    
     /**     -----  FaceUnity  ----     **/
 }
 
@@ -153,12 +160,52 @@
     /**     -----  FaceUnity  ----     **/
 }
 
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    UITextField *textFiled = [alertView textFieldAtIndex:0];
+    if (textFiled) {
+        if (buttonIndex == 0) {
+            return;
+        }
+        
+        NSString *deviceID = textFiled.text;
+        [PLStreamingEnv setDeviceID:deviceID];
+        return;
+    }
+    
+    if (!_audioCaptureConfiguration) {
+        _audioCaptureConfiguration = [PLAudioCaptureConfiguration defaultConfiguration];
+    }
+    _audioCaptureConfiguration.acousticEchoCancellationEnable = (buttonIndex == 1);
+    
+    // 获取推流地址，该地址要拿去鉴权获取 token，最终使用的推流 URL 为 _streamURL
+    [self _getStreamCloudURL];
+    [self _generateStreamURLFromServerWithURL:_streamCloudURL];
+    
+    [self _prepareForCameraSetting];
+    [self _prepareButtons];
+    
+    _panelDelegateGenerator = [[PLPanelDelegateGenerator alloc] initWithMediaStreamingSession:_streamingSession];
+    [_panelDelegateGenerator generate];
+    _panelDelegateGenerator.delegate = self;
+    
+    _modelPanelGenerator = [[PLModelPanelGenerator alloc] initWithMediaStreamingSession:_streamingSession panelDelegateGenerator:_panelDelegateGenerator];
+    self.panelModels = [_modelPanelGenerator generate];
+}
+
+- (void)_getStreamCloudURL {
+#warning 在这里填写获取推流地址的业务服务器 url
+    NSString *streamServer = @"your app server url";
+    NSString *streamID = [NSString randomizedString];
+    
+    NSString *streamURLString = [streamServer stringByAppendingPathComponent:streamID];
+    
+    _streamCloudURL = [NSURL URLWithString:streamURLString];
+}
+
 - (void)_prepareForCameraSetting
 {
-#warning 在这里填写获取推流地址的业务服务器 url
-    NSURL *streamCloudURL = [NSURL URLWithString:@"your app server url"];
-    _sessionConstructor = [[PLStreamingSessionConstructor alloc] initWithStreamCloudURL:streamCloudURL];
-    _sessionConstructor.delegate = self;
+    _sessionConstructor = [[PLStreamingSessionConstructor alloc] initWithAudioCaptureConfiguration:_audioCaptureConfiguration];
     _streamingSession = [_sessionConstructor streamingSession];
     
     _streamingSession.delegate = self;
@@ -174,6 +221,41 @@
         });
     };
     [permission checkAndRequestPermission];
+}
+
+- (void)_generateStreamURLFromServerWithURL:(NSURL *)url
+{
+    NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:url];
+    request.HTTPMethod = @"GET";
+    request.timeoutInterval = 10;
+    
+    NSURLSessionDataTask *task = [[NSURLSession sharedSession] dataTaskWithRequest:request completionHandler:^(NSData * _Nullable data, NSURLResponse * _Nullable response, NSError * _Nullable error) {
+        if (error != nil || response == nil || data == nil) {
+            NSLog(@"get play json faild, %@, %@, %@", error, response, data);
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.4 * NSEC_PER_SEC)), dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                [self _generateStreamURLFromServerWithURL:url];
+            });
+            return;
+        }
+        
+        NSURL *streamURL = [NSURL URLWithString:[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSString *streamURLString = streamURL.absoluteString;
+            
+            // 将推流地址复制到剪切板
+            UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
+            pasteboard.string = streamURLString;
+            
+            // 弹出提示框，显示推流地址，当点击 ok 确认键后，推流被复制到了剪切板，方便将推流地址粘贴用于其它地方
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"streamURL" message:streamURLString delegate:nil cancelButtonTitle:@"ok" otherButtonTitles:nil];
+            [alert show];
+        });
+        
+        // 更新推流的 URL
+        _streamURL = streamURL;
+    }];
+    [task resume];
 }
 
 - (void)_prepareButtons
@@ -337,7 +419,10 @@
                 if (PLStreamStartStateSuccess == feedback) {
                     [button setTitle:@"stop" forState:UIControlStateNormal];
                 } else {
-                    [[[UIAlertView alloc] initWithTitle:@"错误" message:@"推流失败了" delegate:nil cancelButtonTitle:@"知道啦" otherButtonTitles:nil] show];
+                    [[[UIAlertView alloc] initWithTitle:@"错误" message:@"推流失败了，将重新请求有效的URL" delegate:nil cancelButtonTitle:@"知道啦" otherButtonTitles:nil] show];
+                    
+                    // 重新获取有效的URL，即更换 token，播放端的地址不会变
+                    [self _generateStreamURLFromServerWithURL:_streamCloudURL];
                 }
             });
         }];
@@ -368,9 +453,8 @@
     if (!_streamURL) {
         [[[UIAlertView alloc] initWithTitle:@"错误" message:@"还没有获取到 streamJson 没有可供播放的二维码哦" delegate:nil cancelButtonTitle:@"知道啦" otherButtonTitles:nil] show];
     } else {
-#warning 在这里填写相关的 host，hub 即可使用播放器直接扫码播放
-        NSString *host = @"your play host";
-        NSString *hub = @"your hub";
+        NSString *host = @"rtmp://pili-live-rtmp.pili2test.qbox.net";
+        NSString *hub = @"pili2test";
         NSString *streamID = [[[[_streamURL.absoluteString componentsSeparatedByString:@"/"] objectAtIndex:4] componentsSeparatedByString:@"?"] objectAtIndex:0];
         NSString *url = [NSString stringWithFormat:@"%@/%@/%@",host, hub,  streamID];
         UIImage *image = [self createQRForString:url];
@@ -485,11 +569,9 @@
 - (void)panelDelegateGenerator:(PLPanelDelegateGenerator *)panelDelegateGenerator streamStateDidChange:(PLStreamState)state {
     if (PLStreamStateDisconnected == state) {
         [_startButton setTitle:@"start" forState:UIControlStateNormal];
+    } else if (PLStreamStateConnected == state) {
+        [_startButton setTitle:@"stop" forState:UIControlStateNormal];
     }
-}
-
-- (void)PLStreamingSessionConstructor:(PLStreamingSessionConstructor *)constructor didGetStreamURL:(NSURL *)streamURL {
-    _streamURL = streamURL;
 }
 
 @end

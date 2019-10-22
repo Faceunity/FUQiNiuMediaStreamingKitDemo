@@ -46,6 +46,8 @@
 @property (nonatomic, strong) NSArray<NSString *> *itemsDataSource;  /**道具分类数组*/
 @property (nonatomic, strong) NSString *selectedItem;     /**选中的道具名称*/
 
+@property (nonatomic, assign) BOOL isShown ;
+
 + (FUManager *)shareManager;
 
 /**初始化Faceunity,加载道具*/
