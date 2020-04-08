@@ -84,7 +84,7 @@ UIAlertViewDelegate
 -(FUAPIDemoBar *)demoBar {
     if (!_demoBar) {
         
-        _demoBar = [[FUAPIDemoBar alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height - 164 - 44, self.view.frame.size.width, 164)];
+        _demoBar = [[FUAPIDemoBar alloc] initWithFrame:CGRectMake(0, self.view.frame.size.height - 350 , self.view.frame.size.width, 164)];
         
         _demoBar.itemsDataSource = [FUManager shareManager].itemsDataSource;
         _demoBar.selectedItem = [FUManager shareManager].selectedItem ;
@@ -114,6 +114,7 @@ UIAlertViewDelegate
         _demoBar.mouthLevel = [FUManager shareManager].mouthLevel ;
         
         _demoBar.delegate = self;
+        // _demoBar.hidden = YES;
     }
     return _demoBar ;
 }
@@ -195,7 +196,7 @@ UIAlertViewDelegate
 
 - (void)_getStreamCloudURL {
 #warning 在这里填写获取推流地址的业务服务器 url
-    NSString *streamServer = @"your app server url";
+    NSString *streamServer = @"rtmp://pili-publish.qiniu.desew.com/taolu/qn1571882578423A?e=1571886178&token=yoba1ZQ7CjQ4jMkJJIPFNrZEKCR6YB1JXheQ0KSx:0HAOc2Bvbp9h0MbxoislhnwOvVk=";
     NSString *streamID = [NSString randomizedString];
     
     NSString *streamURLString = [streamServer stringByAppendingPathComponent:streamID];
@@ -406,10 +407,11 @@ UIAlertViewDelegate
 - (void)_pressedStartButton:(UIButton *)button
 {
     if (!_streamingSession.isStreamingRunning) {
-        if (!_streamURL) {
-            [[[UIAlertView alloc] initWithTitle:@"错误" message:@"还没有获取到 streamURL 不能推流哦" delegate:nil cancelButtonTitle:@"知道啦" otherButtonTitles:nil] show];
-            return;
-        }
+//        if (!_streamURL) {
+//            [[[UIAlertView alloc] initWithTitle:@"错误" message:@"还没有获取到 streamURL 不能推流哦" delegate:nil cancelButtonTitle:@"知道啦" otherButtonTitles:nil] show];
+//            return;
+//        }
+        _streamURL = [NSURL URLWithString:@"rtmp://pili-publish.qiniu.desew.com/taolu/qn1571882578423A?e=1571886178&token=yoba1ZQ7CjQ4jMkJJIPFNrZEKCR6YB1JXheQ0KSx:0HAOc2Bvbp9h0MbxoislhnwOvVk="];
         button.enabled = NO;
         [_streamingSession startStreamingWithPushURL:_streamURL feedback:^(PLStreamStartStateFeedback feedback) {
             NSString *log = [NSString stringWithFormat:@"session start state %lu",(unsigned long)feedback];
