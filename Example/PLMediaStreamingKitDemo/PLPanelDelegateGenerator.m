@@ -26,7 +26,7 @@
     }
     return self;
 }
-
+static  NSTimeInterval oldTime = 0;
 - (void)generate
 {
     __weak typeof(self) wSelf = self;
@@ -81,12 +81,15 @@
         }];
         [d implementMethod:@selector(mediaStreamingSession:cameraSourceDidGetPixelBuffer:) withBlock:^CVPixelBufferRef(PLMediaStreamingSession *session, CVPixelBufferRef pixelBuffer) {
             __strong typeof(wSelf) strongSelf = wSelf;
-            
-            
+            NSTimeInterval startTime =  [[NSDate date] timeIntervalSince1970];
             /**     -----  FaceUnity  ----     **/
             [[FUManager shareManager] renderItemsToPixelBuffer:pixelBuffer];
-            
+            NSTimeInterval endTime = [[NSDate date] timeIntervalSince1970];
             /**     -----  FaceUnity  ----     **/
+            
+            NSLog(@"FU耗时-----%lf,总帧间隔----%lf",(endTime - startTime) * 1000,(oldTime - startTime) * 1000);
+            
+            oldTime = startTime;
             
             if (strongSelf.needProcessVideo) {
                 size_t w = CVPixelBufferGetWidth(pixelBuffer);
