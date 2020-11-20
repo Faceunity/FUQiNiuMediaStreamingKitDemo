@@ -8,6 +8,9 @@
 
 #import "PLStreamingKitDemoUtils.h"
 
-@interface PLMainViewController : PLMainTabBarController
+@interface PLMainViewController : UIViewController
+
+@property(nonatomic, copy) NSString *roomId;
+
 
 @end
