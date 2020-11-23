@@ -11,6 +11,10 @@
 
 @interface PLViewController ()
 
+/// 房间号
+@property(nonatomic, strong) UITextField *roomIdTF;
+
+
 @end
 
 @implementation PLViewController
@@ -18,41 +22,44 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    // Uncomment the following line to preserve selection between presentations.
-    // self.clearsSelectionOnViewWillAppear = NO;
+    self.navigationItem.title = @"设置房间号";
+    self.view.backgroundColor = [UIColor whiteColor];
+    UITextField *roomIdTF = [[UITextField alloc] initWithFrame:CGRectMake(80, 188, self.view.frame.size.width - 160, 44)];
+    roomIdTF.placeholder = @"请输入房间号";
+    roomIdTF.backgroundColor = [UIColor orangeColor];
+    roomIdTF.layer.cornerRadius = 4;
+    [self.view addSubview:roomIdTF];
+    self.roomIdTF = roomIdTF;
+
+    UIButton *startBtn = [[UIButton alloc] initWithFrame:CGRectMake((self.view.frame.size.width - 120) / 2.0, 360, 120, 44)];
+    [startBtn setTitle:@"开始推流" forState:(UIControlStateNormal)];
+    startBtn.backgroundColor = [UIColor orangeColor];
+    startBtn.layer.cornerRadius = 8;
+    [startBtn addTarget:self action:@selector(startBtnClick) forControlEvents:(UIControlEventTouchUpInside)];
+    [self.view addSubview:startBtn];
     
-    // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-    // self.navigationItem.rightBarButtonItem = self.editButtonItem;
 }
+
+/// 开始推流事件点击
+- (void)startBtnClick{
+    
+    if (self.roomIdTF.text.length == 0) {
+        return;
+    }
+    PLMainViewController *mainVC = [[PLMainViewController alloc] init];
+    mainVC.roomId = [self.roomIdTF.text stringByReplacingOccurrencesOfString:@" " withString:@""];
+    [self.navigationController pushViewController:mainVC animated:YES];
+    
+}
+
+
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+  
+    
 }
 
-#pragma mark - Table view data source
-
-- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {
-    return 1;
-}
-
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 1;
-}
-
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:@"reuseIdentifier"];
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:(UITableViewCellStyleDefault) reuseIdentifier:@"reuseIdentifier"];
-        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-    }
-    cell.textLabel.text = @"进入推流页面";
-    return cell;
-}
-
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    PLMainViewController *mainVC = [[PLMainViewController alloc] init];
-    [self.navigationController pushViewController:mainVC animated:YES];
-}
 
 @end

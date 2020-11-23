@@ -8,8 +8,6 @@
 
 #import "PLAppDelegate.h"
 #import "PLViewController.h"
-#import <Fabric/Fabric.h>
-#import <Crashlytics/Crashlytics.h>
 #import <PLMediaStreamingKit/PLMediaStreamingKit.h>
 
 @interface PLAppDelegate ()
@@ -20,8 +18,6 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    
-    [Fabric with:@[[Crashlytics class]]];
 
     [PLStreamingEnv initEnv];
     
