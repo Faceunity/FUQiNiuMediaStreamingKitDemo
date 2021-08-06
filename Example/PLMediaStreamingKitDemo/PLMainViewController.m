@@ -9,24 +9,16 @@
 #import "PLMainViewController.h"
 
 #import <PLMediaStreamingKit/PLMediaStreamingKit.h>
-#import <Masonry/Masonry.h>
 
 /** faceU */
 #import "FUManager.h"
 #import "FUAPIDemoBar.h"
-
 #import "FUTestRecorder.h"
+#import "UIViewController+FaceUnityUIExtension.h"
 
-
-
-@interface PLMainViewController ()<PLMediaStreamingSessionDelegate,FUAPIDemoBarDelegate>
+@interface PLMainViewController ()<PLMediaStreamingSessionDelegate>
 
 @property(nonatomic, strong) PLMediaStreamingSession *session;
-
-
-/**faceU */
-@property (nonatomic, strong) FUAPIDemoBar *demoBar;
-
 
 @end
 
@@ -35,7 +27,10 @@
 
 - (void)dealloc{
 
-    [[FUManager shareManager] destoryItems];
+    if (self.isuseFU) {
+        
+        [[FUManager shareManager] destoryItems];
+    }
     [self.session destroy];
     
 }
@@ -44,7 +39,7 @@
 - (void)viewDidLoad{
     
     [super viewDidLoad];
-    
+    self.navigationItem.title = self.roomId;
     self.view.backgroundColor = [UIColor whiteColor];
     UIButton *caremaBtn = [[UIButton alloc] init];
     [caremaBtn setTitle:@"相机" forState:(UIControlStateNormal)];
@@ -55,9 +50,13 @@
     
     // 初始化模块
     [self setupSession];
-    
-    // FU
-    [self setupFaceUnity];
+    if (self.isuseFU) {
+        // FU
+        [self setupFaceUnity];
+    }else{
+        // 测试时使用查看性能
+        [[FUTestRecorder shareRecorder] setupRecord];
+    }
     
 }
 
@@ -105,82 +104,30 @@
 }
 
 /**     -----  FaceUnity  ----     **/
-/// faceunity
-- (void)setupFaceUnity{
-
-    [[FUTestRecorder shareRecorder] setupRecord];
-    
-    [[FUManager shareManager] loadFilter];
-    [FUManager shareManager].flipx = YES;
-    [FUManager shareManager].trackFlipx = YES;
-    [FUManager shareManager].isRender = YES;
-    
-    _demoBar = [[FUAPIDemoBar alloc] init];
-    _demoBar.mDelegate = self;
-    [self.view addSubview:_demoBar];
-    [_demoBar mas_makeConstraints:^(MASConstraintMaker *make) {
-        
-        if (@available(iOS 11.0, *)) {
-           
-            make.left.mas_equalTo(self.view.mas_safeAreaLayoutGuideLeft);
-            make.right.mas_equalTo(self.view.mas_safeAreaLayoutGuideRight);
-            make.bottom.mas_equalTo(self.view.mas_safeAreaLayoutGuideBottom);
-        
-        } else {
-        
-            make.left.right.bottom.mas_equalTo(0);
-        }
-
-        make.height.mas_equalTo(195);
-        
-    }];
-    
-}
-/**      FUAPIDemoBarDelegate       **/
-
--(void)filterValueChange:(FUBeautyParam *)param{
-    [[FUManager shareManager] filterValueChange:param];
-}
-
--(void)switchRenderState:(BOOL)state{
-    [FUManager shareManager].isRender = state;
-}
-
--(void)bottomDidChange:(int)index{
-    if (index < 3) {
-        [[FUManager shareManager] setRenderType:FUDataTypeBeautify];
-    }
-    if (index == 3) {
-        [[FUManager shareManager] setRenderType:FUDataTypeStrick];
-    }
-    
-    if (index == 4) {
-        [[FUManager shareManager] setRenderType:FUDataTypeMakeup];
-    }
-    if (index == 5) {
-        [[FUManager shareManager] setRenderType:FUDataTypebody];
-    }
-}
-
-
-/**     -----  FaceUnity  ----     **/
-
 - (CVPixelBufferRef)mediaStreamingSession:(PLMediaStreamingSession *)session cameraSourceDidGetPixelBuffer:(CVPixelBufferRef)pixelBuffer timingInfo:(CMSampleTimingInfo)timingInfo{
-    
+
     [[FUTestRecorder shareRecorder] processFrameWithLog];
-    CVPixelBufferRef buffer = [[FUManager shareManager] renderItemsToPixelBuffer:pixelBuffer];
-    return buffer;
+    // 测试时查看性能
+    if (self.isuseFU) {
+        
+        pixelBuffer = [[FUManager shareManager] renderItemsToPixelBuffer:pixelBuffer];
+        [self checkAI];
+    }
+    
+    return pixelBuffer;
 }
-
-
-
 
 /// 切换摄像头
 /// @param caremaBtn caremaBtn
 - (void)caremaBtnClick:(UIButton *)caremaBtn{
     
     [self.session toggleCamera];
-    [[FUManager shareManager] onCameraChange];
+    
+    if (self.isuseFU) {
+      
+        [[FUManager shareManager] onCameraChange];
+    }
+    
 }
 
 @end
