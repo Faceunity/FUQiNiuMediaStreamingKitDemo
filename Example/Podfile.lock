@@ -15,34 +15,30 @@ PODS:
     - BlocksKit/Core
     - BlocksKit/DynamicDelegate
   - Masonry (1.1.0)
-  - Nama (7.2.0)
-  - PLMediaStreamingKit (3.0.2):
-    - PLMediaStreamingKit/iphoneos (= 3.0.2)
-  - PLMediaStreamingKit/iphoneos (3.0.2)
+  - PLMediaStreamingKit (3.0.3):
+    - PLMediaStreamingKit/iphoneos (= 3.0.3)
+  - PLMediaStreamingKit/iphoneos (3.0.3)
   - SVProgressHUD (2.2.5)
 
 DEPENDENCIES:
   - BlocksKit
   - Masonry
-  - Nama (~> 7.2.0)
-  - PLMediaStreamingKit
+  - PLMediaStreamingKit (~> 3.0.3)
   - SVProgressHUD
 
 SPEC REPOS:
   trunk:
     - BlocksKit
     - Masonry
-    - Nama
     - PLMediaStreamingKit
     - SVProgressHUD
 
 SPEC CHECKSUMS:
   BlocksKit: 7f422b971407001178d181a43b99014ea2591fe6
   Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
-  Nama: 6513d06085933c8d13b1e6360f5c1ea6996f745b
-  PLMediaStreamingKit: 20e0dac77a93e488c8b06bfabf8fdb0fc61f07b5
+  PLMediaStreamingKit: 2773c9113dfdbbfe9874928c1f4331523e68e95e
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
 
-PODFILE CHECKSUM: c7341bbe4d1a61b784a2efa06ef5943acd00ddc2
+PODFILE CHECKSUM: 5e2a0cdbe0d94917bf9c95e57e50f2322864d242
 
 COCOAPODS: 1.9.3

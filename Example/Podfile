@@ -3,11 +3,10 @@
 platform :ios, '9.0'
 
 target 'PLMediaStreamingKitDemo' do
-  pod 'PLMediaStreamingKit'
+  pod 'PLMediaStreamingKit', '~> 3.0.3'
   pod 'Masonry'
   pod 'BlocksKit'
 
   pod 'SVProgressHUD'
-  pod 'Nama', '~> 7.2.0'
   
 end

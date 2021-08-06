@@ -12,5 +12,7 @@
 
 @property(nonatomic, copy) NSString *roomId;
 
+@property(nonatomic, assign) BOOL isuseFU;
+
 
 @end
