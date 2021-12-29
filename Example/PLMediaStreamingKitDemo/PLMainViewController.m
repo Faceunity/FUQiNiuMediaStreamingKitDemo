@@ -11,10 +11,7 @@
 #import <PLMediaStreamingKit/PLMediaStreamingKit.h>
 
 /** faceU */
-#import "FUManager.h"
-#import "FUAPIDemoBar.h"
-#import "FUTestRecorder.h"
-#import "UIViewController+FaceUnityUIExtension.h"
+#import "FUDemoManager.h"
 
 @interface PLMainViewController ()<PLMediaStreamingSessionDelegate>
 
@@ -51,13 +48,13 @@
     // 初始化模块
     [self setupSession];
     if (self.isuseFU) {
-        // FU
-        [self setupFaceUnity];
-    }else{
-        // 测试时使用查看性能
-        [[FUTestRecorder shareRecorder] setupRecord];
+        // FaceUnity UI
+        CGFloat safeAreaBottom = 0;
+        if (@available(iOS 11.0, *)) {
+            safeAreaBottom = [UIApplication sharedApplication].delegate.window.safeAreaInsets.bottom;
+        }
+        [FUDemoManager setupFaceUnityDemoInController:self originY:CGRectGetHeight(self.view.frame) - FUBottomBarHeight - safeAreaBottom];
     }
-    
 }
 
 - (void)setupSession{
@@ -105,13 +102,10 @@
 
 /**     -----  FaceUnity  ----     **/
 - (CVPixelBufferRef)mediaStreamingSession:(PLMediaStreamingSession *)session cameraSourceDidGetPixelBuffer:(CVPixelBufferRef)pixelBuffer timingInfo:(CMSampleTimingInfo)timingInfo{
-
-    [[FUTestRecorder shareRecorder] processFrameWithLog];
-    // 测试时查看性能
+    
     if (self.isuseFU) {
         
         pixelBuffer = [[FUManager shareManager] renderItemsToPixelBuffer:pixelBuffer];
-        [self checkAI];
     }
     
     return pixelBuffer;
