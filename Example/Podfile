@@ -1,12 +1,13 @@
-#source 'https://github.com/CocoaPods/Specs.git'
+source 'https://mirrors.tuna.tsinghua.edu.cn/git/CocoaPods/Specs.git'
 
 platform :ios, '9.0'
 
 target 'PLMediaStreamingKitDemo' do
-  pod 'PLMediaStreamingKit', '~> 3.0.3'
+  pod 'PLMediaStreamingKit', '~> 3.0.2'
   pod 'Masonry'
   pod 'BlocksKit'
 
   pod 'SVProgressHUD'
+  pod 'FURenderKit', '~> 8.3.0'
   
 end
