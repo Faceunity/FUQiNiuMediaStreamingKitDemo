@@ -9,6 +9,7 @@
 #import "PLMainViewController.h"
 
 #import <PLMediaStreamingKit/PLMediaStreamingKit.h>
+#import <Masonry/Masonry.h>
 
 /** faceU */
 #import "FUDemoManager.h"
@@ -16,6 +17,7 @@
 @interface PLMainViewController ()<PLMediaStreamingSessionDelegate>
 
 @property(nonatomic, strong) PLMediaStreamingSession *session;
+@property (nonatomic, strong) FUDemoManager *demoManager;
 
 @end
 
@@ -26,10 +28,9 @@
 
     if (self.isuseFU) {
         
+        [FUManager shareManager].isRender = NO;
         [[FUManager shareManager] destoryItems];
     }
-    [self.session destroy];
-    
 }
 
 
@@ -38,6 +39,14 @@
     [super viewDidLoad];
     self.navigationItem.title = self.roomId;
     self.view.backgroundColor = [UIColor whiteColor];
+    
+    UIButton *backBtn = [[UIButton alloc] init];
+    [backBtn setTitle:@"返回" forState:(UIControlStateNormal)];
+    [backBtn sizeToFit];
+    [backBtn setTitleColor:[UIColor blueColor] forState:(UIControlStateNormal)];
+    [backBtn addTarget:self action:@selector(backBtnClick:) forControlEvents:(UIControlEventTouchUpInside)];
+    self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithCustomView:backBtn];
+    
     UIButton *caremaBtn = [[UIButton alloc] init];
     [caremaBtn setTitle:@"相机" forState:(UIControlStateNormal)];
     [caremaBtn sizeToFit];
@@ -53,7 +62,7 @@
         if (@available(iOS 11.0, *)) {
             safeAreaBottom = [UIApplication sharedApplication].delegate.window.safeAreaInsets.bottom;
         }
-        [FUDemoManager setupFaceUnityDemoInController:self originY:CGRectGetHeight(self.view.frame) - FUBottomBarHeight - safeAreaBottom];
+        self.demoManager = [[FUDemoManager alloc] initWithTargetController:self originY:CGRectGetHeight(self.view.frame) - FUBottomBarHeight - safeAreaBottom];
     }
 }
 
@@ -73,15 +82,22 @@
 
     // 创建推流 session 对象
     self.session = [[PLMediaStreamingSession alloc] initWithVideoCaptureConfiguration:videoCaptureConfiguration audioCaptureConfiguration:audioCaptureConfiguration videoStreamingConfiguration:videoStreamingConfiguration audioStreamingConfiguration:audioStreamingConfiguration stream:nil];
-    self.session.delegate = self;
 
-    // 将预览视图添加为当前视图的子视图
-    [self.view addSubview:self.session.previewView];
+    // 添加预览视图到父视图
+    [self.view insertSubview:_session.previewView atIndex:0];
     
-
+    // 配置采集预览视图 frame
+    [_session.previewView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.insets = UIEdgeInsetsZero;
+    }];
+    
+    // 遵守代理 PLMediaStreamingSessionDelegate
+    _session.delegate = self;
+    [_session setBeautifyModeOn:NO];
+    
     // 推流地址
-    NSString *pushStr = [NSString stringWithFormat:@"rtmp://pili-publish.xuzhuolalala.support2technical.me/xuzhuo-lalala/qiniu_test/%@",self.roomId];
-    NSURL *pushURL = [NSURL URLWithString:pushStr];
+#error 推流地址
+    NSString *pushStr = "";
     
     // 开始推流
     [self.session startStreamingWithPushURL:pushURL feedback:^(PLStreamStartStateFeedback feedback) {
@@ -109,6 +125,15 @@
     }
     
     return pixelBuffer;
+}
+
+/// 返回
+/// @param backBtn caremaBtn
+- (void)backBtnClick:(UIButton *)backBtn{
+
+    [self.session destroy];
+    [self.navigationController popViewControllerAnimated:YES];
+    
 }
 
 /// 切换摄像头

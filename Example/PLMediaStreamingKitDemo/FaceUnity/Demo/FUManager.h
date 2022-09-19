@@ -22,8 +22,12 @@
 
 @property (nonatomic, weak) id<FUManagerProtocol>delegate;
 
+@property (nonatomic, assign, readonly) FUDevicePerformanceLevel devicePerformanceLevel;
+
 /// 用于道具是否镜像
 @property (nonatomic, assign) BOOL flipx;
+
+@property(nonatomic, assign) BOOL isRender;
 
 + (FUManager *)shareManager;
 
