@@ -17,21 +17,11 @@
 @interface PLMainViewController ()<PLMediaStreamingSessionDelegate>
 
 @property(nonatomic, strong) PLMediaStreamingSession *session;
-@property (nonatomic, strong) FUDemoManager *demoManager;
 
 @end
 
 @implementation PLMainViewController
 
-
-- (void)dealloc{
-
-    if (self.isuseFU) {
-        
-        [FUManager shareManager].isRender = NO;
-        [[FUManager shareManager] destoryItems];
-    }
-}
 
 
 - (void)viewDidLoad{
@@ -58,11 +48,8 @@
     [self setupSession];
     if (self.isuseFU) {
         // FaceUnity UI
-        CGFloat safeAreaBottom = 0;
-        if (@available(iOS 11.0, *)) {
-            safeAreaBottom = [UIApplication sharedApplication].delegate.window.safeAreaInsets.bottom;
-        }
-        self.demoManager = [[FUDemoManager alloc] initWithTargetController:self originY:CGRectGetHeight(self.view.frame) - FUBottomBarHeight - safeAreaBottom];
+        [FUDemoManager setupFUSDK];
+        [[FUDemoManager shared] addDemoViewToView:self.view originY:CGRectGetHeight(self.view.bounds) - FUBottomBarHeight - FUSafaAreaBottomInsets()];
     }
 }
 
@@ -96,8 +83,8 @@
     [_session setBeautifyModeOn:NO];
     
     // 推流地址
-#error 推流地址
-    NSString *pushStr = "";
+    NSString *pushStr = [NSString stringWithFormat:@"rtmp://pili-publish.qnsdk.com/sdk-live/faceunitytest/%@",self.roomId];
+    NSURL *pushURL = [NSURL URLWithString:pushStr];
     
     // 开始推流
     [self.session startStreamingWithPushURL:pushURL feedback:^(PLStreamStartStateFeedback feedback) {
@@ -120,8 +107,23 @@
 - (CVPixelBufferRef)mediaStreamingSession:(PLMediaStreamingSession *)session cameraSourceDidGetPixelBuffer:(CVPixelBufferRef)pixelBuffer timingInfo:(CMSampleTimingInfo)timingInfo{
     
     if (self.isuseFU) {
-        
-        pixelBuffer = [[FUManager shareManager] renderItemsToPixelBuffer:pixelBuffer];
+    
+        [[FUDemoManager shared] checkAITrackedResult];
+        if ([FUDemoManager shared].shouldRender) {
+            [[FUTestRecorder shareRecorder] processFrameWithLog];
+            [FUDemoManager updateBeautyBlurEffect];
+            FURenderInput *input = [[FURenderInput alloc] init];
+            input.renderConfig.imageOrientation = FUImageOrientationUP;
+            input.pixelBuffer = pixelBuffer;
+            //开启重力感应，内部会自动计算正确方向，设置fuSetDefaultRotationMode，无须外面设置
+            input.renderConfig.gravityEnable = YES;
+            FURenderOutput *output = [[FURenderKit shareRenderKit] renderWithInput:input];
+            if (output) {
+                return output.pixelBuffer;
+            }
+        } else {
+            return pixelBuffer;
+        }
     }
     
     return pixelBuffer;
@@ -130,8 +132,11 @@
 /// 返回
 /// @param backBtn caremaBtn
 - (void)backBtnClick:(UIButton *)backBtn{
-
+    
     [self.session destroy];
+    if (self.isuseFU) {
+        [FUDemoManager destory];
+    }
     [self.navigationController popViewControllerAnimated:YES];
     
 }
@@ -144,7 +149,7 @@
     
     if (self.isuseFU) {
       
-        [[FUManager shareManager] onCameraChange];
+        [FUDemoManager resetTrackedResult];
     }
     
 }
