@@ -10,7 +10,7 @@
 #import "PLStreamingKitDemoUtils.h"
 #import <BlocksKit/NSObject+A2DynamicDelegate.h>
 
-#import "FUManager.h"
+#import "FUDemoManager.h"
 @implementation PLPanelDelegateGenerator
 {
     PLMediaStreamingSession *_streamingSession;
@@ -83,7 +83,15 @@ static  NSTimeInterval oldTime = 0;
             __strong typeof(wSelf) strongSelf = wSelf;
             NSTimeInterval startTime =  [[NSDate date] timeIntervalSince1970];
             /**     -----  FaceUnity  ----     **/
-            [[FUManager shareManager] renderItemsToPixelBuffer:pixelBuffer];
+            if ([FUDemoManager shared].shouldRender) {
+                [FUDemoManager updateBeautyBlurEffect];
+                FURenderInput *input = [[FURenderInput alloc] init];
+                input.renderConfig.imageOrientation = FUImageOrientationUP;
+                input.pixelBuffer = pixelBuffer;
+                //开启重力感应，内部会自动计算正确方向，设置fuSetDefaultRotationMode，无须外面设置
+                input.renderConfig.gravityEnable = YES;
+                FURenderOutput *output = [[FURenderKit shareRenderKit] renderWithInput:input];
+            }
             NSTimeInterval endTime = [[NSDate date] timeIntervalSince1970];
             /**     -----  FaceUnity  ----     **/
             
