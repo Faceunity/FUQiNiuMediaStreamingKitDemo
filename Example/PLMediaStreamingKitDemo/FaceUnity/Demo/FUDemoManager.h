@@ -18,6 +18,9 @@ NS_ASSUME_NONNULL_BEGIN
 /// 开关状态
 @property (nonatomic, assign) BOOL shouldRender;
 
+/// 贴纸方向
+@property (nonatomic, assign,) BOOL stickerH;
+
 + (instancetype)shared;
 
 /// 初始化FURenderKit

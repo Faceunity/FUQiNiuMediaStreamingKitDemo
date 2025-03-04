@@ -14,37 +14,37 @@ PODS:
   - BlocksKit/UIKit (2.2.5):
     - BlocksKit/Core
     - BlocksKit/DynamicDelegate
-  - FURenderKit (8.7.0)
+  - FURenderKit_nama (8.13.0)
   - Masonry (1.1.0)
-  - PLMediaStreamingKit (3.0.8):
-    - PLMediaStreamingKit/ex-HappyDNS (= 3.0.8)
-    - PLMediaStreamingKit/iphoneos (= 3.0.8)
-  - PLMediaStreamingKit/ex-HappyDNS (3.0.8)
-  - PLMediaStreamingKit/iphoneos (3.0.8)
+  - PLMediaStreamingKit (3.1.1):
+    - PLMediaStreamingKit/ex-HappyDNS (= 3.1.1)
+    - PLMediaStreamingKit/HappyDNS (= 3.1.1)
+  - PLMediaStreamingKit/ex-HappyDNS (3.1.1)
+  - PLMediaStreamingKit/HappyDNS (3.1.1)
   - SVProgressHUD (2.2.5)
 
 DEPENDENCIES:
   - BlocksKit
-  - FURenderKit (~> 8.7.0)
+  - FURenderKit_nama (~> 8.13.0)
   - Masonry
-  - PLMediaStreamingKit (~> 3.0.8)
+  - PLMediaStreamingKit (~> 3.1.1)
   - SVProgressHUD
 
 SPEC REPOS:
   https://mirrors.tuna.tsinghua.edu.cn/git/CocoaPods/Specs.git:
     - BlocksKit
-    - FURenderKit
+    - FURenderKit_nama
     - Masonry
     - PLMediaStreamingKit
     - SVProgressHUD
 
 SPEC CHECKSUMS:
   BlocksKit: 8639b2848dd51c35c957af4d9fbdc7a769a1fc12
-  FURenderKit: a73f9a86fc4b2963c6c29bd58f0b42a953cf9362
+  FURenderKit_nama: 0737ac79ece72d2a23b56887cf57d70edb9586fe
   Masonry: 678fab65091a9290e40e2832a55e7ab731aad201
-  PLMediaStreamingKit: 87136e39058b7d65ef13031e49e73b3c7313bc99
+  PLMediaStreamingKit: c9189aefaef1b8f90a53a93df1f961eddcb5c778
   SVProgressHUD: 1428aafac632c1f86f62aa4243ec12008d7a51d6
 
-PODFILE CHECKSUM: e9e5814279183c36e6a15ca02b05e591697e9c1c
+PODFILE CHECKSUM: 721dcd2f68d7c58d20aa2ffd35bbfc1bcfd5c2e2
 
-COCOAPODS: 1.11.3
+COCOAPODS: 1.16.2
